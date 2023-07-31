@@ -1,3 +1,8 @@
+shell.C
+*.sln
+*.vcxproj*
+sqlite.exe
+
 *- Copy*
 
 ## Ignore Visual Studio temporary files, build results, and
