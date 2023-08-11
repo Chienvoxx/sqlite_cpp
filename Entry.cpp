@@ -18,7 +18,7 @@
 
 #include "SQLite.h"
 
-namespace vx
+namespace voxx
 {
 	namespace db
 	{
@@ -28,10 +28,10 @@ namespace vx
 
 int main()
 {
-	vx::db::Entry();
+	voxx::db::Entry();
 }
 
-namespace vx
+namespace voxx
 {
 	namespace db
 	{
@@ -76,7 +76,7 @@ namespace vx
 
 				//	Create, Bind, and prepare a Statement in one call.
 				//	Accepts variadic arguments.
-				//	Other specialized bind methods may need to be written as needed.
+				//	Other specialized bind methods to be written as needed.
 				Statement statement(connection, "select ?1 union all select ?2", hello, std::wstring(L"World"));
 				printf("Inserted %lld\n", connection.RowId());
 
@@ -84,7 +84,7 @@ namespace vx
 
 				for (Row const& row : statement)
 				{
-					printf("%s: %s\n", row.GetString(0), TypeName(row.GetType(0)));
+					printf("%s: %s\n", row.GetString(0), SQLiteTypeName(row.GetType(0)));
 				}
 
 				Execute(connection, "create table Users (Name)");
@@ -105,7 +105,7 @@ namespace vx
 
 				for (Row const& row : Statement(connection, "select RowId, Name from Users"))
 				{
-					printf("%d: %s: %s\n", row.GetInt(0), row.GetString(1), TypeName(row.GetType(1)));
+					printf("%d: %s: %s\n", row.GetInt(0), row.GetString(1), SQLiteTypeName(row.GetType(1)));
 				}
 
 				Execute(connection, "drop table if exists Things");
@@ -131,6 +131,9 @@ namespace vx
 				// <Backup>
 				if (0)
 				{
+					// https://www.sqlite.org/backup.html
+					// https://www.sqlite.org/c3ref/backup_finish.html
+					// https://www.sqlite.org/lang_vacuum.html
 					// vacuum is a single exclusing transaction. You cannot do any other database work while it is in progress.
 					// Can potentially use up a lot of disk space, depending on how large your database is to begin with.
 					SaveToDisk(connection, "backupRaw.db");

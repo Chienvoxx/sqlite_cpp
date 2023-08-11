@@ -23,7 +23,7 @@
 	#define ASSERT __noop
 #endif
 
-namespace vx
+namespace voxx
 {
 	namespace db
 	{
@@ -44,8 +44,6 @@ namespace vx
 			{
 				return nullptr;
 			}
-
-			// static void Close(Type value) noexcept
 		};
 
 

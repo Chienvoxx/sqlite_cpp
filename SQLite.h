@@ -19,9 +19,18 @@
 
 #pragma once
 
+// For some reason this is not working for me. But adding,
+//		sqlite3_config(SQLITE_CONFIG_URI,1)
+// before opening database does.
+//#ifndef SQLITE_USE_URI
+//#define  SQLITE_USE_URI 1
+//#endif
+
 #include "sqlite3.h"
 #include "Handle.h"
 #include <string>
+
+//	https://www.sqlite.org/capi3ref.html
 
 // SQLite Results from a Query
 // https://www.sqlite.org/c3ref/column_blob.html
@@ -61,14 +70,14 @@
 #define VERIFY_(result, expression) (expression)
 #endif
 
-namespace vx
+namespace voxx
 {
 	namespace db
 	{
 
 		//	SQLite.h
 		//		enum class Type
-		//		static char const* TypeName(Type const type)
+		//		static char const* SQLiteTypeName(Type const type)
 		//		struct Exception
 		//		class Connection
 		//		class Backup
@@ -94,7 +103,7 @@ namespace vx
 		};
 
 
-		static char const* TypeName(Type const type)
+		static char const* SQLiteTypeName(Type const type)
 		{
 			switch (type)
 			{
@@ -131,7 +140,6 @@ namespace vx
 				{
 					VERIFY_(SQLITE_OK, sqlite3_close(value));
 
-
 					//VERIFY_
 					// ^^^^^^^^
 					//(void)((!!((0 == sqlite3_close(value)))) || (1 != _CrtDbgReportW(2, L"C:\\dev\\learn-sqlite\\SampleSqlite\\SampleSqlite\\SQLite.h", 34, 0, L"%ls", L"0 == sqlite3_close(value)")) || (__debugbreak(), 0));
@@ -148,17 +156,24 @@ namespace vx
 
 			ConnectionHandle mHandle;
 
-			// F = Function. Either sqlite3_open, or sqlite3_open16
+			// Original version had the sqlite3_open function passed in because it used the non-_v2 versions.
+			// I swithced to use v2 because flags give more control of database creation settings
+			// , but there is no v2 version of open16.
+			// F = Function. Either sqlite3_open_v2, or sqlite3_open16_v2
+			// https://www.sqlite.org/c3ref/open.html
+			// Flag example: SQLITE_OPEN_READWRITE | SQLITE_OPEN_CREATE | SQLITE_OPEN_MEMORY | SQLITE_OPEN_SHAREDCACHE
 			template <typename F, typename C>
-			void InternalOpen(F open, C const* const filename)
+			void InternalOpen(F open, C const* const filename, uint32_t flags)
 			{
+				if (flags == 0)
+					flags == SQLITE_OPEN_READWRITE | SQLITE_OPEN_CREATE;
+
 				Connection temp;
 
-				if (SQLITE_OK != open(filename, temp.mHandle.Set()))
+				if (SQLITE_OK != open(filename, temp.mHandle.Set(), flags, NULL)) // open = sqlite3_open_v2
 				{
 					temp.ThrowLastError();
 				}
-
 				swap(mHandle, temp.mHandle);
 			}
 
@@ -167,19 +182,28 @@ namespace vx
 			Connection() noexcept = default;
 
 			template <typename C>
-			explicit Connection(C const* const filename)
+			explicit Connection(C const* const filename, uint32_t flags = 0)
 			{
-				Open(filename);
+				Open(filename, flags);
+				//Open(filename);
 			}
 
 			static Connection Memory()
 			{
-				return Connection(":memory:");
+				//return Connection(":memory:");
+				
+				// <testing>
+				//sqlite3_config(SQLITE_CONFIG_URI, 1);
+				//return Connection("file:memory:");
+				//return Connection("file::memory:?cache=shared", SQLITE_OPEN_READWRITE | SQLITE_OPEN_CREATE | SQLITE_OPEN_MEMORY | SQLITE_OPEN_URI);
+				// </testing>
+				uint32_t flags = SQLITE_OPEN_READWRITE | SQLITE_OPEN_CREATE | SQLITE_OPEN_MEMORY | SQLITE_OPEN_SHAREDCACHE;
+				return Connection(":memory:", flags);
 			}
 
 			static Connection WideMemory()
 			{
-				return Connection(L":memory:");
+				return Connection(L":memory:", 0);
 			}
 
 			explicit operator bool() const noexcept
@@ -197,14 +221,23 @@ namespace vx
 				throw Exception(GetAbi());
 			}
 
-			void Open(char const* const filename)
+
+			void Open(char const* const filename, uint32_t flags = 0)
 			{
-				InternalOpen(sqlite3_open, filename);
+				//InternalOpen(sqlite3_open, filename);
+				InternalOpen(sqlite3_open_v2, filename, flags);
 			}
 
-			void Open(wchar_t const* const filename)
+			void Open(wchar_t const* const filename, uint32_t flags = 0)
 			{
-				InternalOpen(sqlite3_open16, filename);
+				//InternalOpen(sqlite3_open16, filename);
+				Connection temp;
+
+				if (SQLITE_OK != sqlite3_open16(filename, temp.mHandle.Set()))
+				{
+					temp.ThrowLastError();
+				}
+				swap(mHandle, temp.mHandle);
 			}
 
 			long long RowId() const noexcept
@@ -233,8 +266,9 @@ namespace vx
 				}
 			};
 
-			using BackupHandle = Handle<BackupHandleTraits>;
-			BackupHandle mHandle;
+			//using BackupHandle = Handle<BackupHandleTraits>;
+			//BackupHandle mHandle;
+			Handle<BackupHandleTraits> mHandle;	// this appears equivalent to the above two lines.
 			Connection const* mDestination = nullptr;
 
 		public:
