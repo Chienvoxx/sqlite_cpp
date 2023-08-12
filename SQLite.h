@@ -273,6 +273,8 @@ namespace voxx
 
 		public:
 
+			// "main" becuse it is the default name of the first db connected in a sqlite3 connection object.
+			// Multiple other db's could also be connected
 			Backup(Connection const& destination
 					, Connection const& source
 					, char const* const destinationName = "main"
@@ -589,11 +591,23 @@ namespace voxx
 		}
 
 
+		static void SaveToDisk(Connection const& source, Connection const& destination)
+		{
+			Backup backup(destination, source);
+			backup.Step();
+		}
+
+
 		static void SaveToDisk(Connection const& source, char const* const filename)
 		{
 			Connection destination(filename);
-			Backup backup(destination, source);
-			backup.Step();
+			SaveToDisk(destination, source);
+		}
+
+
+		static void LoadFromDisk(Connection const& onDisk, Connection const& inMem)
+		{
+			SaveToDisk(onDisk, inMem);
 		}
 	}
 }
