@@ -166,7 +166,7 @@ namespace voxx
 			void InternalOpen(F open, C const* const filename, uint32_t flags)
 			{
 				if (flags == 0)
-					flags == SQLITE_OPEN_READWRITE | SQLITE_OPEN_CREATE;
+					flags = SQLITE_OPEN_READWRITE | SQLITE_OPEN_CREATE;
 
 				Connection temp;
 
@@ -187,6 +187,11 @@ namespace voxx
 				Open(filename, flags);
 				//Open(filename);
 			}
+
+			Connection(const std::string& filename, uint32_t flags = 0)
+				:
+				Connection(filename.c_str(), flags)
+			{}
 
 			static Connection Memory()
 			{
@@ -460,6 +465,30 @@ namespace voxx
 			void Bind(int const index, int const value) const
 			{
 				if (SQLITE_OK != sqlite3_bind_int(GetAbi(), index, value))
+				{
+					ThrowLastError();
+				}
+			}
+
+			void Bind(int const index, int64_t const value) const
+			{
+				if (SQLITE_OK != sqlite3_bind_int64(GetAbi(), index, value))
+				{
+					ThrowLastError();
+				}
+			}
+
+			void Bind(int const index, float const value) const
+			{
+				if (SQLITE_OK != sqlite3_bind_double(GetAbi(), index, value))
+				{
+					ThrowLastError();
+				}
+			}
+
+			void Bind(int const index, double const value) const
+			{
+				if (SQLITE_OK != sqlite3_bind_double(GetAbi(), index, value))
 				{
 					ThrowLastError();
 				}
