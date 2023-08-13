@@ -119,13 +119,35 @@ namespace voxx
 		}
 
 
+		static std::string SQLiteResultCodeName(int codeValue)
+		{
+			switch (codeValue)
+			{
+			case 0   : return "SQLITE_OK";
+			case 1   : return "SQLITE_ERROR";
+			case 5   : return "SQLITE_BUSY";
+			case 12  : return "SQLITE_NOTFOUND";
+			case 16  : return "SQLITE_EMPTY";
+			case 19  : return "SQLITE_CONSTRAINT";
+			case 21  : return "SQLITE_MISUSE";
+			case 100 : return "SQLITE_ROW";
+			case 101 : return "SQLITE_DONE";
+			}
+
+			ASSERT(false);
+			return "Invalid";
+		}
+
+
 		struct Exception
 		{
 			int Result = 0;
+			std::string ResultCodeName;
 			std::string Message;
 
 			explicit Exception(sqlite3* const connection) :
 				Result(sqlite3_extended_errcode(connection)),
+				ResultCodeName(SQLiteResultCodeName(sqlite3_extended_errcode(connection))),
 				Message(sqlite3_errmsg(connection))
 			{}
 		};

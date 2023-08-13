@@ -65,11 +65,15 @@ namespace voxx
 					});
 				// </Profile>
 
-				//Statement statement;
+				//{
+				//	Statement statement;
+				//	statement.Prepare(connection, "select ?1 union all select ?2");
+				//	statement.Bind(1, std::string("Hello"));
+				//	statement.Bind(2, std::wstring(L"World"));
+				//	auto result = statement.Step();
+				//	printf("%s\n", statement.GetString(0));
+				//}
 
-				//statement.Prepare(connection, "select ?1 union all select ?2");
-				////statement.Bind(1, std::string("Hello"));
-				////statement.Bind(2, std::wstring(L"World"));
 				std::string hello = "Hello";
 				//std::wstring world = L"World";
 				//statement.BindAll(hello, world);
